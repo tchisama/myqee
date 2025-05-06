@@ -1,12 +1,10 @@
 "use client"
 
-import { Bell, Moon, Search, Sun } from "lucide-react"
+import {  Moon, Sun } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Input } from "@/components/ui/input"
 import { useState } from "react"
 
 export function Header() {
@@ -30,11 +28,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex flex-1 items-center gap-4 md:gap-8">
-        <div className="flex-1">
-        </div>
         {/* <div className="flex-1">
-          <h1 className="text-xl font-semibold tracking-tight">{getPageTitle()}</h1>
         </div> */}
+        <div className="flex-1">
+          <h1 className="text-xl font-semibold tracking-tight">{getPageTitle()}</h1>
+        </div>
 
         {/* <div className="relative hidden md:flex w-full max-w-sm items-center">
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
@@ -59,7 +57,6 @@ export function Header() {
               <Moon className="h-5 w-5" />
             )}
           </Button>
-
 
           <div className="flex items-center gap-2">
             <Avatar className="h-9 w-9 border">

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import Image from "next/image"
 import {
   ArrowLeft,
   Clock,
@@ -130,8 +130,9 @@ const coursesData = {
 }
 
 export default function CoursePage() {
-  const params = useParams()
-  const courseId = params.courseId as string
+  // const params = useParams()
+  const courseId = "nextjs-masterclass"
+  // params.courseId as string
 
   const course = coursesData[courseId as keyof typeof coursesData]
 
@@ -162,7 +163,7 @@ export default function CoursePage() {
       <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="relative aspect-[3/1] md:aspect-[5/1] w-full overflow-hidden bg-[#3435FF]">
           <div className="absolute inset-0  z-10"></div>
-          <img
+          <Image
             src={course.image}
             alt={course.title}
             width={1200}
@@ -242,7 +243,7 @@ export default function CoursePage() {
                 <Card className={`overflow-hidden py-0  transition-all hover:shadow-md ${video.completed ? 'border-[#3435FF55] bg-green-50/30' : ''}`}>
                   <div className="flex flex-col md:flex-row">
                     <div className="relative aspect-video w-full md:w-[160px]">
-                      <img
+                      <Image
                         src={video.thumbnail}
                         alt={video.title}
                         width={600}

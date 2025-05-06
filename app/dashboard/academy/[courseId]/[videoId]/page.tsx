@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Download, List } from "lucide-react"
 
@@ -105,9 +106,9 @@ export default function VideoPage() {
   const params = useParams()
   const courseId = params.courseId as string
   const videoId = params.videoId as string
-  
+
   const course = coursesData[courseId]
-  
+
   if (!course) {
     return (
       <div className="flex h-[400px] w-full items-center justify-center">
@@ -121,9 +122,9 @@ export default function VideoPage() {
       </div>
     )
   }
-  
+
   const videoIndex = course.videos.findIndex(v => v.id === videoId)
-  
+
   if (videoIndex === -1) {
     return (
       <div className="flex h-[400px] w-full items-center justify-center">
@@ -137,7 +138,7 @@ export default function VideoPage() {
       </div>
     )
   }
-  
+
   const video = course.videos[videoIndex]
   const prevVideo = videoIndex > 0 ? course.videos[videoIndex - 1] : null
   const nextVideo = videoIndex < course.videos.length - 1 ? course.videos[videoIndex + 1] : null
@@ -151,10 +152,10 @@ export default function VideoPage() {
             Back to Course
           </Link>
         </Button>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild disabled={!prevVideo}>
-            <Link 
+            <Link
               href={prevVideo ? `/dashboard/academy/${courseId}/${prevVideo.id}` : '#'}
               className={!prevVideo ? 'pointer-events-none opacity-50' : ''}
             >
@@ -162,9 +163,9 @@ export default function VideoPage() {
               Previous
             </Link>
           </Button>
-          
+
           <Button variant="outline" asChild disabled={!nextVideo}>
-            <Link 
+            <Link
               href={nextVideo ? `/dashboard/academy/${courseId}/${nextVideo.id}` : '#'}
               className={!nextVideo ? 'pointer-events-none opacity-50' : ''}
             >
@@ -174,10 +175,10 @@ export default function VideoPage() {
           </Button>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="pt-0">
             <div className="aspect-video w-full overflow-hidden bg-black">
               <iframe
                 src={video.videoUrl}
@@ -197,15 +198,9 @@ export default function VideoPage() {
             <CardContent>
               <p>{video.description}</p>
             </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">
-                <Download className="mr-2 h-4 w-4" />
-                Download Resources
-              </Button>
-            </CardFooter>
           </Card>
         </div>
-        
+
         <div>
           <Card>
             <CardHeader>
@@ -220,15 +215,15 @@ export default function VideoPage() {
             <CardContent className="max-h-[500px] overflow-y-auto">
               <div className="space-y-2">
                 {course.videos.map((v, i) => (
-                  <Link 
-                    key={v.id} 
+                  <Link
+                    key={v.id}
                     href={`/dashboard/academy/${courseId}/${v.id}`}
                     className="block"
                   >
-                    <div 
+                    <div
                       className={`rounded-md p-3 transition-colors ${
-                        v.id === videoId 
-                          ? 'bg-[#3435FF] text-white' 
+                        v.id === videoId
+                          ? 'bg-[#3435FF] text-white'
                           : 'hover:bg-muted'
                       }`}
                     >
