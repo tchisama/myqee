@@ -8,6 +8,9 @@ module.exports = {
     './src/**/*.{ts,tsx}',
   ],
   theme: {
+    fontFamily: {
+      sans: ['Lato', 'sans-serif'],
+    },
     extend: {
       colors: {
         'primary-blue': '#3435FF',

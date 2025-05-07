@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Lato } from "next/font/google";
 import "./globals.css";
+import "./font.css";
 
-
-const RobotoFont = Roboto({
+// Load Lato font with all available weights
+const lato = Lato({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-roboto",
+  weight: ["100", "300", "400", "700", "900"],
+  variable: "--font-lato",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -20,9 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={lato.variable}>
       <body
-        className={`antialiased min-h-screen bg-background ${RobotoFont.variable}`}
+        className={`antialiased min-h-screen bg-background ${lato.variable} font-sans`}
+        style={{ fontFamily: "Lato, sans-serif" }}
       >
         {children}
       </body>
