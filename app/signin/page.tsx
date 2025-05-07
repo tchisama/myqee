@@ -3,25 +3,27 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-
-import {  Shield } from "lucide-react"
+import { Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { signIn } from "next-auth/react"
 
 export default function SignInPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
 
-    // Simulate authentication process
-    setTimeout(() => {
+    try {
+      // Use next-auth/react signIn method
+      await signIn("google", {
+        callbackUrl: "/dashboard"
+      })
+    } catch (error) {
+      console.error("Authentication error:", error)
       setIsLoading(false)
-      router.push("/dashboard")
-    }, 1500)
+    }
   }
 
   return (

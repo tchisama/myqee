@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
+import { auth } from "@/auth";
 import "./globals.css";
 import "./font.css";
+import { Providers } from "@/components/providers";
 
 // Load Lato font with all available weights
 const lato = Lato({
@@ -27,7 +29,7 @@ export default function RootLayout({
         className={`antialiased min-h-screen bg-background ${lato.variable} font-sans`}
         style={{ fontFamily: "Lato, sans-serif" }}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
