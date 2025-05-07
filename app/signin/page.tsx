@@ -107,6 +107,12 @@ export default function SignInPage() {
 
         <div className="mt-6 text-center text-sm text-slate-500">
           <p>
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="font-medium text-primary hover:underline transition-colors">
+              Sign up
+            </Link>
+          </p>
+          <p className="mt-2">
             Need help?{" "}
             <Link href="#" className="font-medium text-primary hover:underline transition-colors">
               Contact Support

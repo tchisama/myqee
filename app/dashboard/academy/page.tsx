@@ -1,18 +1,19 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { BookOpen, Clock, GraduationCap, Search, Video } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 
+import { CourseGrid } from "./components/CourseGrid"
+import { Course } from "./components/types"
+
 // ERP learning course data
-const courses = [
+const courses: Course[] = [
   {
     id: "erp-fundamentals",
     title: "ERP Fundamentals",
@@ -97,6 +98,16 @@ export default function AcademyPage() {
     setTimeout(() => setIsLoading(false), 300)
   }
 
+  // Helper function to get total videos count
+  const getTotalVideosCount = () => {
+    return courses.reduce((acc, course) => {
+      if (typeof course.videos === 'number') {
+        return acc + course.videos;
+      }
+      return acc + course.videos.length;
+    }, 0);
+  };
+
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -131,7 +142,7 @@ export default function AcademyPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Video className="h-5 w-5 text-[#3435FF]" />
-                <span className="text-sm font-medium">{courses.reduce((acc, course) => acc + course.videos, 0)} Videos</span>
+                <span className="text-sm font-medium">{getTotalVideosCount()} Videos</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-[#3435FF]" />
@@ -163,10 +174,10 @@ export default function AcademyPage() {
         <Separator className="my-1" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          // Skeleton loading state
-          Array.from({ length: 3 }).map((_, i) => (
+      {isLoading ? (
+        // Skeleton loading state
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i} className="h-full pt-0 overflow-hidden transition-all hover:shadow-md">
               <div className="aspect-video w-full bg-muted animate-pulse"></div>
               <CardHeader>
@@ -179,43 +190,13 @@ export default function AcademyPage() {
                 <div className="h-4 w-1/4 bg-muted rounded animate-pulse"></div>
               </CardFooter>
             </Card>
-          ))
-        ) : (
-          filteredCourses.map((course) => (
-            <Link key={course.id} href={`/dashboard/academy/${course.id}`} className="block group">
-              <Card className="h-full pt-0 overflow-hidden transition-all hover:shadow-lg border-[#3435FF]/0 hover:border-[#3435FF]/20">
-                <div className="aspect-video w-full overflow-hidden bg-[#3435FF] relative">
-                  <Image
-                    src={course.image}
-                    alt={course.title}
-                    width={600}
-                    height={400}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    <Badge variant="default" className="text-xs bg-[#3435FF]">{course.level}</Badge>
-                    <Badge variant="secondary" className="text-xs">{course.category}</Badge>
-                  </div>
-                </div>
-                <CardHeader>
-                  <CardTitle className="group-hover:text-[#3435FF] transition-colors">{course.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">{course.description}</CardDescription>
-                </CardHeader>
-                <CardFooter className="flex justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Video className="h-3.5 w-3.5" />
-                    <span>{course.videos} videos</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{course.duration}</span>
-                  </div>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <CourseGrid
+          courses={filteredCourses}
+        />
+      )}
 
       {filteredCourses.length === 0 && !isLoading && (
         <div className="flex h-[300px] w-full items-center justify-center rounded-xl border border-dashed bg-muted/10">

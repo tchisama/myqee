@@ -1,0 +1,164 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { Toaster } from "sonner"
+
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form } from "@/components/ui/form"
+
+import { signupSchema, SignupFormValues } from "./types"
+import {
+  BackgroundEffects,
+  SignupHeader,
+  SignupStepper,
+  StepContent,
+  StepDescription,
+  StepHeader,
+  StepNavigation,
+  SignupFooter
+} from "./components"
+
+export default function SignupPage() {
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [paymentMethod] = useState("cmi")
+  const [isGoogleVerified, setIsGoogleVerified] = useState(false)
+
+  // Initialize form with default values
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      companyName: "",
+      cardNumber: "",
+      cardExpiry: "",
+      cardCvc: "",
+      cardName: "",
+    },
+  });
+
+  // Fixed price for the service
+  const servicePrice = 100;
+
+  // Handle form submission
+  const onSubmit = (values: SignupFormValues) => {
+    setIsSubmitting(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      console.log({
+        ...values,
+        logo: logoPreview,
+        paymentMethod: paymentMethod,
+        amount: servicePrice
+      });
+
+      setIsSubmitting(false);
+
+      // Show success message
+      toast.success("Account created successfully!", {
+        description: "Redirecting you to your dashboard...",
+      });
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+    }, 1500);
+  };
+
+  // Navigate to next step
+  const goToNextStep = () => {
+    if (currentStep === 0) {
+      // Google sign-in step with OTP verification is handled within the component
+      // The Next button will be disabled until OTP verification is complete
+      setCurrentStep(1);
+    } else if (currentStep === 1) {
+      // Validate company name before proceeding
+      form.trigger("companyName").then((isValid) => {
+        if (isValid) setCurrentStep(2);
+      });
+    } else if (currentStep === 2) {
+      // Logo is optional, so we can proceed regardless
+      setCurrentStep(3);
+    } else if (currentStep === 3) {
+      // Submit the form on the final step
+      form.handleSubmit(onSubmit)();
+    }
+  };
+
+  // Navigate to previous step
+  const goToPreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4 relative">
+      {/* Background effects - with lower z-index to ensure it doesn't interfere with inputs */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <BackgroundEffects />
+      </div>
+
+      {/* Main content container with higher z-index */}
+      <div className="relative z-10 flex flex-col items-center w-full">
+        {/* Toaster for notifications */}
+        <Toaster position="top-center" />
+
+        {/* Header with logo */}
+        <SignupHeader />
+
+        <Card className="w-full max-w-3xl shadow-lg">
+          <CardHeader className="pb-2">
+            {/* Step indicator */}
+            <SignupStepper currentStep={currentStep} />
+
+            <CardTitle className="text-2xl font-bold">
+              <StepHeader currentStep={currentStep} />
+            </CardTitle>
+
+            <CardDescription>
+              <StepDescription currentStep={currentStep} />
+            </CardDescription>
+          </CardHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="space-y-6 pt-4">
+                {/* Step content */}
+                <StepContent
+                  currentStep={currentStep}
+                  form={form}
+                  logoPreview={logoPreview}
+                  setLogoPreview={setLogoPreview}
+                  servicePrice={servicePrice}
+                  onGoogleVerificationComplete={() => setIsGoogleVerified(true)}
+                />
+              </CardContent>
+
+              <CardFooter>
+                {/* Navigation buttons */}
+                <StepNavigation
+                  currentStep={currentStep}
+                  isSubmitting={isSubmitting}
+                  goToPreviousStep={goToPreviousStep}
+                  goToNextStep={goToNextStep}
+                  isGoogleVerified={isGoogleVerified}
+                />
+              </CardFooter>
+            </form>
+          </Form>
+        </Card>
+
+        {/* Footer with sign in link */}
+        <SignupFooter />
+      </div>
+    </div>
+  )
+}
