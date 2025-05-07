@@ -1,16 +1,56 @@
 "use client"
 
-import { useState } from "react"
+import {  useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
+import { useSupabase } from "@/hooks/use-supabase"
+import { useRouter } from "next/navigation"
 
 export default function SignInPage() {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const supabase = useSupabase()
+  const {data:session} = useSession()
+  const usersession = session?.user
+
+
+
+  useEffect(() => {
+    // console.log("SESSION::", session)
+    if (session?.user) {
+      // fetch user
+      console.log("USER::", usersession?.email)
+      const fetch = async ()=>{
+        const {data:userData} = await supabase
+          .from('users')
+          .select('id, email, name')
+          .eq('email', usersession?.email)
+          .single()
+        if(!userData) return;
+        const {data:instanceData} = await supabase
+          .from('instances')
+          .select('id, name, logo_url, language')
+          .eq('owner_id', userData.id)
+          .single()
+        console.log(instanceData)
+        if(!instanceData) {
+          router.push("/signup")
+        }
+        if(instanceData) {
+          router.push("/dashboard")
+        }
+      }
+      fetch()
+    }
+  }, [ supabase, router,session,usersession])
+
+
+
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
@@ -18,7 +58,7 @@ export default function SignInPage() {
     try {
       // Use next-auth/react signIn method
       await signIn("google", {
-        callbackUrl: "/dashboard"
+        callbackUrl: "/signin"
       })
     } catch (error) {
       console.error("Authentication error:", error)
@@ -67,6 +107,7 @@ export default function SignInPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4 pb-6">
+            {
             <Button
               className={cn(
                 "w-full bg-white text-slate-800 hover:bg-slate-50 border border-slate-200",
@@ -90,9 +131,11 @@ export default function SignInPage() {
                     className="h-4 w-4"
                   />
                 )}
-                Sign in with Google
+                Sign in with Google .
               </span>
             </Button>
+            }
+
 
             <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
               <Shield className="h-3 w-3 text-primary/70" />

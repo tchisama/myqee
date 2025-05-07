@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
-import { auth } from "@/auth";
 import "./globals.css";
 import "./font.css";
 import { Providers } from "@/components/providers";

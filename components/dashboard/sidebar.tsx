@@ -2,13 +2,18 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, CreditCard, Settings } from "lucide-react"
+import { BookOpen, Circle, CreditCard, Settings } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 
 const sidebarItems = [
+  {
+    title: "My instance",
+    href: "https://app.qee.pro",
+    icon: Circle
+  },
   {
     title: "QEE Academy",
     href: "/dashboard/academy",

@@ -33,7 +33,7 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
           <div className="text-lg font-bold text-primary">{servicePrice} Dh</div>
         </div>
         <p className="text-xs text-slate-600">
-          Access to all features of QEE platform with unlimited usage.
+          Access to all features of Qee-nano platform with unlimited usage.
         </p>
       </motion.div>
 

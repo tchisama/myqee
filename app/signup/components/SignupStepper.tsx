@@ -64,7 +64,7 @@ export function SignupStepper({ currentStep }: SignupStepperProps) {
                     exit={{ scale: 0.5, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    {step}
+                    {step + 1}
                   </motion.span>
                 )}
               </AnimatePresence>

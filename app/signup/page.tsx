@@ -19,13 +19,15 @@ import {
   StepNavigation,
   SignupFooter
 } from "./components"
+import { useSupabase } from "@/hooks/use-supabase"
+import { useSession } from "next-auth/react"
 
 export default function SignupPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
-  const [paymentMethod] = useState("cmi")
+  // const [paymentMethod] = useState("cmi")
   const [isGoogleVerified, setIsGoogleVerified] = useState(false)
 
   // Initialize form with default values
@@ -42,32 +44,47 @@ export default function SignupPage() {
 
   // Fixed price for the service
   const servicePrice = 100;
+  const supabase = useSupabase();
+  const {data:session} = useSession()
 
   // Handle form submission
-  const onSubmit = (values: SignupFormValues) => {
+  const onSubmit = async (values: SignupFormValues) => {
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log({
-        ...values,
-        logo: logoPreview,
-        paymentMethod: paymentMethod,
-        amount: servicePrice
-      });
+    const userEmail = session?.user?.email;
+    const user = await supabase.from('users').select('id').eq('email', userEmail).single();
 
-      setIsSubmitting(false);
+    const createInstance = async () => {
+      if(!userEmail) return;
+      if(!user?.data) return;
+      const { data, error } = await supabase
+        .from('instances')
+        .insert({
+          owner_id: user.data?.id,
+          name: values.companyName,
+          logo_url: logoPreview,
+          language: 'en',
+        });
 
-      // Show success message
-      toast.success("Account created successfully!", {
-        description: "Redirecting you to your dashboard...",
-      });
+      if (error) {
+        console.error('Error creating instance:', error);
+        setIsSubmitting(false);
+        toast.error("Failed to create instance");
+        return;
+      }
 
-      // Redirect to dashboard after a short delay
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
-    }, 1500);
+      return data;
+    };
+      createInstance().then(()=>{
+        setIsSubmitting(false);
+        toast.success("Account created successfully!", {
+          description: "Redirecting you to your dashboard...",
+        });
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000); 
+      })
+
   };
 
   // Navigate to next step
