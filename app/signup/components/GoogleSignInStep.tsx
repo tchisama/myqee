@@ -53,7 +53,7 @@ export function GoogleSignInStep({ onVerificationComplete }: GoogleSignInStepPro
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center justify-center py-8"
+      className="flex flex-col items-center justify-center py-2"
     >
       {!showOTP ? (
         // Google Sign-in Button
@@ -67,7 +67,7 @@ export function GoogleSignInStep({ onVerificationComplete }: GoogleSignInStepPro
             <Button
               className={cn(
                 "w-full bg-white text-slate-800 hover:bg-slate-50 border border-slate-200",
-                "flex items-center gap-2 shadow-sm transition-all duration-300 hover:shadow px-8 py-6",
+                "flex items-center gap-2 shadow-sm transition-all duration-300 hover:shadow px-6 py-3",
                 "relative overflow-hidden group"
               )}
               onClick={handleGoogleSignIn}
@@ -95,21 +95,21 @@ export function GoogleSignInStep({ onVerificationComplete }: GoogleSignInStepPro
         >
           {!isVerified ? (
             <>
-              <div className="text-center mb-6">
+              <div className="text-center mb-3">
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
                 >
-                  <KeyRound className="h-10 w-10 text-primary mx-auto mb-4" />
+                  <KeyRound className="h-6 w-6 text-primary mx-auto mb-2" />
                 </motion.div>
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
-                  className="text-slate-500"
+                  className="text-slate-500 text-sm"
                 >
-                  We{"'"}ve sent a verification code to your email
+                  Enter verification code
                 </motion.p>
               </div>
 
@@ -117,9 +117,9 @@ export function GoogleSignInStep({ onVerificationComplete }: GoogleSignInStepPro
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.4 }}
-                className="mb-6"
+                className="mb-3"
               >
-                <div className="flex justify-center mb-4">
+                <div className="flex justify-center mb-2">
                   <InputOTP
                     maxLength={6}
                     value={otp}
@@ -173,20 +173,20 @@ export function GoogleSignInStep({ onVerificationComplete }: GoogleSignInStepPro
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
-              className="text-center py-6"
+              className="text-center py-2"
             >
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}
               >
-                <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-2" />
               </motion.div>
               <motion.h3
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className="text-xl font-semibold mb-2"
+                className="text-base font-semibold mb-1"
               >
                 Verification Successful
               </motion.h3>
@@ -194,7 +194,7 @@ export function GoogleSignInStep({ onVerificationComplete }: GoogleSignInStepPro
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
-                className="text-slate-500 mb-6"
+                className="text-slate-500 text-sm"
               >
                 Your email has been verified successfully
               </motion.p>

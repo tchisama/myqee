@@ -13,7 +13,7 @@ export function SignupStepper({ currentStep }: SignupStepperProps) {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mb-8"
+      className="mb-4"
     >
       <div className="flex justify-between">
         {[0, 1, 2, 3].map((step) => (
@@ -25,7 +25,7 @@ export function SignupStepper({ currentStep }: SignupStepperProps) {
             transition={{ duration: 0.3, delay: 0.1 * step }}
           >
             <motion.div
-              className={`flex h-10 w-10 items-center justify-center rounded-full border-2
+              className={`flex h-7 w-7 items-center justify-center rounded-full border-2
                 ${currentStep === step
                   ? 'border-primary bg-primary text-white'
                   : currentStep > step
@@ -54,7 +54,7 @@ export function SignupStepper({ currentStep }: SignupStepperProps) {
                     exit={{ scale: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Check className="h-5 w-5" />
+                    <Check className="h-3.5 w-3.5" />
                   </motion.div>
                 ) : (
                   <motion.span
@@ -70,7 +70,7 @@ export function SignupStepper({ currentStep }: SignupStepperProps) {
               </AnimatePresence>
             </motion.div>
             <motion.span
-              className={`mt-2 text-sm font-medium`}
+              className={`mt-1 text-xs font-medium`}
               animate={{
                 color: currentStep >= step ? 'rgb(52, 53, 255)' : 'rgb(148, 163, 184)'
               }}
@@ -81,7 +81,7 @@ export function SignupStepper({ currentStep }: SignupStepperProps) {
           </motion.div>
         ))}
       </div>
-      <div className="mt-4 relative">
+      <div className="mt-2 relative">
         <div className="absolute top-0 left-0 right-0 h-1 bg-slate-200 rounded"></div>
         <motion.div
           className="absolute top-0 left-0 h-1 bg-primary rounded"

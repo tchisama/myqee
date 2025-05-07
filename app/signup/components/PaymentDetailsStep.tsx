@@ -26,13 +26,13 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-slate-50 p-4 rounded-lg border border-slate-200"
+        className="bg-slate-50 p-2 rounded-lg border border-slate-200"
       >
         <div className="flex justify-between items-center ">
-          <h3 className="text-base font-medium">Service Subscription</h3>
-          <div className="text-2xl font-bold text-primary">{servicePrice} Dh</div>
+          <h3 className="text-sm font-medium">Service Subscription</h3>
+          <div className="text-lg font-bold text-primary">{servicePrice} Dh</div>
         </div>
-        <p className="text-sm text-slate-600">
+        <p className="text-xs text-slate-600">
           Access to all features of QEE platform with unlimited usage.
         </p>
       </motion.div>
@@ -41,10 +41,10 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
-        className="space-y-4 pt-4"
+        className="space-y-2 pt-2"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-medium">Payment Method</h3>
+          <h3 className="text-sm font-medium">Payment Method</h3>
           <div className="flex items-center gap-2">
             <div className="h-6 w-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded text-[10px] text-white font-bold flex items-center justify-center">
               CMI
@@ -57,19 +57,19 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
-          className="border rounded-lg p-4 bg-white"
+          className="border rounded-lg p-3 bg-white"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-md text-white font-bold text-xs flex items-center justify-center">
-              CMI PAY
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-8 w-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-md text-white font-bold text-xs flex items-center justify-center">
+              CMI
             </div>
             <div>
-              <p className="font-medium">CMI Payment Gateway</p>
+              <p className="text-sm font-medium">CMI Payment Gateway</p>
               <p className="text-xs text-slate-500">Secure payment processing</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {[
               { name: "cardName" as const, label: "Name on Card", placeholder: "John Smith" },
               { name: "cardNumber" as const, label: "Card Number", placeholder: "4242 4242 4242 4242" },
@@ -86,12 +86,12 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
                   control={form.control}
                   name={field.name}
                   render={({ field: formField }) => (
-                    <FormItem>
-                      <FormLabel>{field.label}</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">{field.label}</FormLabel>
                       <FormControl>
-                        <Input placeholder={field.placeholder} {...formField} />
+                        <Input placeholder={field.placeholder} {...formField} className="h-8 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -103,7 +103,7 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.8 }}
-            className="mt-4 flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded"
+            className="mt-2 flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 p-1.5 rounded"
           >
             <Lock className="h-3 w-3 text-primary/70" />
             <span>Your payment is processed securely through CMI{"'"}s encrypted gateway</span>

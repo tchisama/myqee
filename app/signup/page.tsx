@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { Toaster } from "sonner"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Form } from "@/components/ui/form"
 
 import { signupSchema, SignupFormValues } from "./types"
@@ -16,8 +16,6 @@ import {
   SignupHeader,
   SignupStepper,
   StepContent,
-  StepDescription,
-  StepHeader,
   StepNavigation,
   SignupFooter
 } from "./components"
@@ -115,22 +113,16 @@ export default function SignupPage() {
         <SignupHeader />
 
         <Card className="w-full max-w-3xl shadow-lg">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 space-y-2">
             {/* Step indicator */}
             <SignupStepper currentStep={currentStep} />
 
-            <CardTitle className="text-2xl font-bold">
-              <StepHeader currentStep={currentStep} />
-            </CardTitle>
-
-            <CardDescription>
-              <StepDescription currentStep={currentStep} />
-            </CardDescription>
+            {/* Removed titles and descriptions as requested */}
           </CardHeader>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <CardContent className="space-y-6 pt-4">
+              <CardContent className="space-y-2 pt-2">
                 {/* Step content */}
                 <StepContent
                   currentStep={currentStep}

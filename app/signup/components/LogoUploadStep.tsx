@@ -42,14 +42,14 @@ export function LogoUploadStep({ logoPreview, setLogoPreview }: LogoUploadStepPr
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
-      className="space-y-4"
+      className="space-y-2"
     >
-      <div className="flex flex-col sm:flex-row items-start gap-6">
+      <div className="flex flex-col sm:flex-row items-start gap-3">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="flex-shrink-0 h-48 w-48 bg-muted/20 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 transition-colors"
+          className="flex-shrink-0 h-32 w-32 bg-muted/20 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 transition-colors"
         >
           {logoPreview ? (
             <motion.div
@@ -60,15 +60,15 @@ export function LogoUploadStep({ logoPreview, setLogoPreview }: LogoUploadStepPr
               <Image
                 src={logoPreview}
                 alt="Company Logo"
-                width={180}
-                height={180}
-                className="p-3 aspect-square object-contain"
+                width={120}
+                height={120}
+                className="p-2 aspect-square object-contain"
               />
             </motion.div>
           ) : (
             <div className="flex flex-col items-center justify-center text-muted-foreground">
-              <Building2 className="h-10 w-10 mb-2" />
-              <span className="text-sm">No logo uploaded</span>
+              <Building2 className="h-6 w-6 mb-1" />
+              <span className="text-xs">No logo</span>
             </div>
           )}
         </motion.div>
@@ -76,7 +76,7 @@ export function LogoUploadStep({ logoPreview, setLogoPreview }: LogoUploadStepPr
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="w-full sm:w-auto space-y-4"
+          className="w-full sm:w-auto space-y-2"
         >
           <div className="relative w-full sm:w-48">
             <Input
@@ -89,24 +89,22 @@ export function LogoUploadStep({ logoPreview, setLogoPreview }: LogoUploadStepPr
             <Button
               type="button"
               variant="outline"
-              className="w-full gap-2 h-11 border-dashed hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all pointer-events-none"
+              className="w-full gap-2 h-9 border-dashed hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all pointer-events-none"
             >
               <Upload className="h-4 w-4" />
               Upload Logo
             </Button>
           </div>
-          <div className="bg-muted/30 p-3 rounded-lg">
+          <div className="bg-muted/30 p-2 rounded-lg">
             <p className="text-xs text-muted-foreground">
-              <span className="font-medium block mb-1">Logo requirements:</span>
-              • Recommended size: 300x200px<br />
-              • Max file size: 2MB<br />
-              • Supported formats: PNG, JPG, SVG
+              <span className="font-medium">Logo requirements:</span>
+              300x200px, max 2MB (PNG, JPG, SVG)
             </p>
           </div>
         </motion.div>
       </div>
-      <p className="text-sm text-slate-500 italic">
-        Note: Logo upload is optional. You can always add or change your logo later.
+      <p className="text-xs text-slate-500 italic">
+        Optional: You can add or change your logo later.
       </p>
     </motion.div>
   )

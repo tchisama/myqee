@@ -24,16 +24,16 @@ export function CompanyInfoStep({ form }: CompanyInfoStepProps) {
         control={form.control}
         name="companyName"
         render={({ field }) => (
-          <FormItem className="space-y-2">
-            <FormLabel className="text-base font-medium">Company Name</FormLabel>
+          <FormItem className="space-y-1">
+            <FormLabel className="text-sm font-medium">Company Name</FormLabel>
             <FormControl>
               <Input
                 placeholder="Enter your company name"
                 {...field}
-                className="h-11"
+                className="h-9"
               />
             </FormControl>
-            <FormDescription>
+            <FormDescription className="text-xs">
               This will be displayed on your invoices and documents.
             </FormDescription>
             <FormMessage />

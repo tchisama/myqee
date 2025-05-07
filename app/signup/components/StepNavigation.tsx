@@ -20,7 +20,7 @@ export function StepNavigation({
   isGoogleVerified = false
 }: StepNavigationProps) {
   return (
-    <div className="flex w-full justify-between border-t border-slate-100 bg-slate-50/50 mt-2 p-2">
+    <div className="flex w-full justify-between border-t border-slate-100 bg-slate-50/50 mt-1 p-1.5">
       <motion.div
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
@@ -31,7 +31,7 @@ export function StepNavigation({
           variant="outline"
           onClick={goToPreviousStep}
           disabled={currentStep === 0 || isSubmitting}
-          className="gap-2"
+          className="gap-1 h-8 text-xs px-3"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -46,7 +46,7 @@ export function StepNavigation({
           type="button"
           onClick={goToNextStep}
           disabled={isSubmitting || (currentStep === 0 && !isGoogleVerified)}
-          className="gap-2"
+          className="gap-1 h-8 text-xs px-3"
         >
           {isSubmitting ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
