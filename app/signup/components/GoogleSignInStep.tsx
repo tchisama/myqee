@@ -10,6 +10,7 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from "@/components/ui/input-otp"
+import Image from "next/image"
 
 interface GoogleSignInStepProps {
   onVerificationComplete?: () => void;
@@ -78,7 +79,14 @@ export function GoogleSignInStep({ onVerificationComplete }: GoogleSignInStepPro
                 {isLoading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                 ) : (
-                  <LogIn className="h-5 w-5 text-primary" />
+                  // <LogIn className="h-5 w-5 text-primary" />
+                  <Image
+                    src="/icons/google-logo.svg"
+                    alt="Google Logo"
+                    width={16}
+                    height={16}
+                    className="h-4 w-4"
+                  />
                 )}
                 Sign in with Google
               </span>
@@ -216,7 +224,13 @@ export function GoogleSignInStepHeader() {
       transition={{ duration: 0.3 }}
       className="flex items-center gap-2"
     >
-      <LogIn className="h-5 w-5 text-primary" />
+      <Image
+        src="/icons/google-logo.svg"
+        alt="Google Logo"
+        width={16}
+        height={16}
+        className="h-4 w-4"
+      />
       Sign In
     </motion.div>
   )

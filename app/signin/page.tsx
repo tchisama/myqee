@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-import { LogIn, Shield } from "lucide-react"
+import {  Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -79,7 +79,14 @@ export default function SignInPage() {
                 {isLoading ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                 ) : (
-                  <LogIn className="h-4 w-4 text-primary" />
+                  // <LogIn className="h-4 w-4 text-primary" />
+                  <Image
+                    src="/icons/google-logo.svg"
+                    alt="Google Logo"
+                    width={16}
+                    height={16}
+                    className="h-4 w-4"
+                  />
                 )}
                 Sign in with Google
               </span>
