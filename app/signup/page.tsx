@@ -64,13 +64,41 @@ export default function SignupPage() {
           name: values.companyName,
           logo_url: logoPreview,
           language: 'en',
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Error creating instance:', error);
         setIsSubmitting(false);
         toast.error("Failed to create instance");
         return;
+      }
+
+      // Create a subscription for the new instance (30 days)
+      if (data && data.length > 0) {
+        const instanceId = data[0].id;
+
+        // Calculate end date (30 days from now)
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+
+        // Insert subscription directly
+        const { error: directInsertError } = await supabase
+          .from('subscriptions')
+          .insert({
+            instance_id: instanceId,
+            owner_id: user.data?.id,
+            plan_name: 'pro',
+            amount: servicePrice,
+            status: 'active',
+            start_date: new Date(),
+            end_date: endDate
+          });
+
+        if (directInsertError) {
+          console.error('Error creating subscription:', directInsertError);
+          // Continue anyway, as the instance was created successfully
+        }
       }
 
       return data;
@@ -82,7 +110,7 @@ export default function SignupPage() {
         });
         setTimeout(() => {
           router.push("/dashboard");
-        }, 2000); 
+        }, 2000);
       })
 
   };

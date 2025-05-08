@@ -1,84 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import {  CreditCard, Shield, Zap, Users, BarChart, Clock, Star, Lock } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { toast } from "sonner"
-
-// Mock subscription plans
-const plans = [
-  {
-    id: "basic",
-    name: "Basic",
-    description: "Essential features for small businesses",
-    price: 29,
-    icon: Users,
-    color: "#6366F1",
-    features: [
-      { text: "Up to 100 invoices per month", icon: CreditCard },
-      { text: "Basic reporting", icon: BarChart },
-      { text: "2 team members", icon: Users },
-      { text: "Email support", icon: Clock },
-    ],
-    popular: false,
-  },
-  {
-    id: "pro",
-    name: "Professional",
-    description: "Advanced features for growing businesses",
-    price: 79,
-    icon: Star,
-    color: "#3435FF",
-    features: [
-      { text: "Unlimited invoices", icon: CreditCard },
-      { text: "Advanced reporting", icon: BarChart },
-      { text: "10 team members", icon: Users },
-      { text: "Priority email support", icon: Clock },
-      { text: "Custom templates", icon: Zap },
-      { text: "API access", icon: Lock },
-    ],
-    popular: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "Complete solution for large organizations",
-    price: 199,
-    icon: Shield,
-    color: "#0F172A",
-    features: [
-      { text: "Unlimited everything", icon: Zap },
-      { text: "24/7 phone support", icon: Clock },
-      { text: "Unlimited team members", icon: Users },
-      { text: "Custom development", icon: Lock },
-      { text: "Dedicated account manager", icon: Users },
-      { text: "On-premise deployment option", icon: Shield },
-      { text: "Advanced security features", icon: Shield },
-    ],
-    popular: false,
-  },
-]
+import React from "react"
+import { CreditCard, Shield, Clock, AlertTriangle, AlertCircle } from "lucide-react"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { useSession } from "next-auth/react"
+import { format, parseISO } from "date-fns"
+import { cn } from "@/lib/utils"
+import { useSubscription } from "@/hooks/use-subscription"
+import { getSubscriptionStatusClasses } from "@/lib/subscription"
 
 export function SubscriptionInfo() {
-  const [currentPlan, setCurrentPlan] = useState("pro")
-  const [isChangingPlan, setIsChangingPlan] = useState(false)
+  const { data: session } = useSession()
+  const {
+    subscriptionInfo,
+    activeSubscriptions,
+    pendingSubscriptions,
+    loading
+  } = useSubscription()
 
-  const handleChangePlan = (planId: string) => {
-    setIsChangingPlan(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setCurrentPlan(planId)
-      setIsChangingPlan(false)
-      toast.success(`Successfully switched to ${plans.find(p => p.id === planId)?.name} plan`)
-    }, 1000)
-  }
-
-  const currentPlanDetails = plans.find(p => p.id === currentPlan)
+  // Get the first active and pending subscription for display
+  const activeSubscription = activeSubscriptions.length > 0 ? activeSubscriptions[0] : null
+  const pendingSubscription = pendingSubscriptions.length > 0 ? pendingSubscriptions[0] : null
 
   return (
     <div className="space-y-8">
@@ -87,31 +29,43 @@ export function SubscriptionInfo() {
         <div className="bg-gradient-to-r from-[#3435FF]/5 to-transparent px-6 py-3 border-b">
           <h3 className="text-lg font-semibold text-[#3435FF]">Current Subscription</h3>
         </div>
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-6 py-0 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: currentPlanDetails?.color || '#3435FF' }}>
-                {currentPlanDetails?.icon && <currentPlanDetails.icon className="h-6 w-6 text-white" />}
+            <div className={cn(
+              "border rounded-lg p-3 flex flex-col items-center",
+              getSubscriptionStatusClasses(subscriptionInfo.urgencyLevel, 'bg'),
+              getSubscriptionStatusClasses(subscriptionInfo.urgencyLevel, 'border')
+            )}>
+              <div className={cn(
+                "text-2xl font-bold",
+                getSubscriptionStatusClasses(subscriptionInfo.urgencyLevel, 'text')
+              )}>
+                {loading ? "..." :
+                  subscriptionInfo.isExpired ? "Expired" : subscriptionInfo.daysRemaining
+                }
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-semibold">
-                    {currentPlanDetails?.name} Plan
-                  </h3>
-                  <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>
+              <p className={cn(
+                "text-xs",
+                getSubscriptionStatusClasses(subscriptionInfo.urgencyLevel, 'text').replace('text-', 'text-opacity-70 text-')
+              )}>
+                {subscriptionInfo.isExpired ? "Subscription Status" : "Total Days Remaining"}
+              </p>
+
+
+              {subscriptionInfo.isExpiring && (
+                <div className="mt-2 text-xs flex items-center gap-1">
+                  {subscriptionInfo.urgencyLevel === 'high' ? (
+                    <AlertCircle className="h-3 w-3 text-red-500" />
+                  ) : (
+                    <AlertTriangle className="h-3 w-3 text-amber-500" />
+                  )}
+                  <span className={getSubscriptionStatusClasses(subscriptionInfo.urgencyLevel, 'text')}>
+                    {subscriptionInfo.daysRemaining <= 1 ? "Expires today!" : `Expires in ${subscriptionInfo.daysRemaining} days`}
+                  </span>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Billed monthly at ${currentPlanDetails?.price}/month
-                </p>
-              </div>
+              )}
+
             </div>
-            <Button
-              variant="outline"
-              className="gap-2 border-[#3435FF] text-[#3435FF] hover:bg-[#3435FF]/5"
-              onClick={() => setIsChangingPlan(!isChangingPlan)}
-            >
-              {isChangingPlan ? "Cancel" : "Change Plan"}
-            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50">
@@ -138,11 +92,48 @@ export function SubscriptionInfo() {
               <div className="bg-white dark:bg-slate-800 p-3 rounded-md shadow-sm space-y-2">
                 <p className="text-sm flex justify-between">
                   <span className="text-muted-foreground">Next billing date:</span>
-                  <span className="font-medium">June 15, 2023</span>
+                  <span className="font-medium">
+                    {loading ? (
+                      "Loading..."
+                    ) : subscriptionInfo.endDate ? (
+                      format(parseISO(subscriptionInfo.endDate), "MMMM d, yyyy")
+                    ) : (
+                      "Not available"
+                    )}
+                  </span>
+                </p>
+                <p className="text-sm flex justify-between">
+                  <span className="text-muted-foreground">Subscription status:</span>
+                  <span className={cn(
+                    "font-medium",
+                    subscriptionInfo.isExpired ? "text-red-600" : ""
+                  )}>
+                    {loading ? (
+                      "Loading..."
+                    ) : subscriptionInfo.isExpired ? (
+                      "Expired"
+                    ) : subscriptionInfo.status ? (
+                      subscriptionInfo.status.charAt(0).toUpperCase() + subscriptionInfo.status.slice(1)
+                    ) : (
+                      "Not available"
+                    )}
+                  </span>
+                </p>
+                <p className="text-sm flex justify-between">
+                  <span className="text-muted-foreground">Subscription amount:</span>
+                  <span className="font-medium">
+                    {loading ? (
+                      "Loading..."
+                    ) : activeSubscription?.amount ? (
+                      `${activeSubscription.amount.toFixed(2)} Dh`
+                    ) : (
+                      "Not available"
+                    )}
+                  </span>
                 </p>
                 <p className="text-sm flex justify-between">
                   <span className="text-muted-foreground">Billing email:</span>
-                  <span className="font-medium">billing@yourcompany.com</span>
+                  <span className="font-medium">{session?.user?.email || "Not available"}</span>
                 </p>
               </div>
             </div>
@@ -152,87 +143,32 @@ export function SubscriptionInfo() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Shield className="h-4 w-4 text-[#3435FF]" />
             <p>
-              Your subscription will automatically renew on June 15, 2023. You can cancel anytime before the renewal date.
+              {loading ? (
+                "Loading subscription information..."
+              ) : subscriptionInfo.endDate ? (
+                <>
+                  Your subscription will {subscriptionInfo.isExpiring ? "expire" : "automatically renew"} on {format(parseISO(subscriptionInfo.endDate), "MMMM d, yyyy")}.
+                  {subscriptionInfo.isExpiring && (
+                    <span className={cn(
+                      "ml-1 font-medium",
+                      getSubscriptionStatusClasses(subscriptionInfo.urgencyLevel, 'text')
+                    )}>
+                      {subscriptionInfo.urgencyLevel === 'high' ? "Please renew today!" : `Please renew within ${subscriptionInfo.daysRemaining} days.`}
+                    </span>
+                  )}
+                  {pendingSubscription && (
+                    <> A pending subscription is scheduled to start after the current one ends, adding {pendingSubscription.end_date && pendingSubscription.start_date ?
+                      Math.max(0, Math.round((parseISO(pendingSubscription.end_date).getTime() - parseISO(pendingSubscription.start_date).getTime()) / (1000 * 60 * 60 * 24))) : 0} more days.</>
+                  )}
+                  {!pendingSubscription && !subscriptionInfo.isExpiring && " You can cancel anytime before the renewal date."}
+                </>
+              ) : (
+                "Your subscription information is not available."
+              )}
             </p>
           </div>
         </CardFooter>
       </Card>
-
-      {/* Plan Selection */}
-      {isChangingPlan && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <div className="h-5 w-1 bg-[#3435FF] rounded-full"></div>
-            <h3 className="text-xl font-semibold">Choose a Plan</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {plans.map((plan) => (
-              <Card
-                key={plan.id}
-                className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${
-                  plan.id === currentPlan
-                    ? 'border-green-500 ring-1 ring-green-500/20'
-                    : plan.popular
-                      ? 'border-[#3435FF] ring-1 ring-[#3435FF]/20'
-                      : 'hover:border-[#3435FF]/30'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute top-0 right-0 bg-[#3435FF] text-white text-xs font-medium px-3 py-1 rounded-bl-lg">
-                    POPULAR
-                  </div>
-                )}
-                <CardHeader className="pb-0">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: plan.color }}>
-                      <plan.icon className="h-5 w-5 text-white" />
-                    </div>
-                    <CardTitle>{plan.name}</CardTitle>
-                  </div>
-                  <CardDescription className="mb-4">{plan.description}</CardDescription>
-                  <div className="mt-2 mb-4">
-                    <span className="text-3xl font-bold">${plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Separator />
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3435FF]/10 mt-0.5">
-                          <feature.icon className="h-3 w-3 text-[#3435FF]" />
-                        </div>
-                        <span className="text-sm">{feature.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    className={`w-full ${
-                      plan.id === currentPlan
-                        ? 'bg-green-500 hover:bg-green-600'
-                        : plan.popular
-                          ? 'bg-[#3435FF] hover:bg-[#3435FF]/90'
-                          : 'border-[#3435FF] text-[#3435FF] hover:bg-[#3435FF]/5'
-                    }`}
-                    variant={plan.id === currentPlan ? "default" : plan.popular ? "default" : "outline"}
-                    onClick={() => handleChangePlan(plan.id)}
-                    disabled={plan.id === currentPlan || isChangingPlan}
-                  >
-                    {plan.id === currentPlan ? (
-                      <>Current Plan</>
-                    ) : (
-                      <>Select Plan</>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

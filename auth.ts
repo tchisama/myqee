@@ -68,48 +68,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
       const isDashboardPath = nextUrl.pathname.startsWith('/dashboard')
+      const isAdminPath = nextUrl.pathname.startsWith('/admin')
 
+      // Check if user is admin (has email pro.tchisama@gmail.com)
+      const isAdmin = auth?.user?.email === 'pro.tchisama@gmail.com'
 
-      // check if the user have a instance
-      // const hasInstance = async () => {
-      //   const supabase = createSupabaseServiceRole()
-      //   const {data:user} = await supabase
-      //     .from('users')
-      //     .select('id')
-      //     .eq('email', auth?.user?.email)
-      //     .single()
-      //   if (!user) {
-      //     console.error('Error fetching user with email ' + auth?.user?.email + ':', user)
-      //     return Response.redirect(new URL('/signup', nextUrl))
-      //   }else{
-      //     console.log("USER::", user)
-      //   }
-      //   const { data, error } = await supabase
-      //     .from('instances')
-      //     .select('id')
-      //     .eq('owner_id', user?.id)
-      //     .single()
-      //   if (error) {
-      //     console.error('Error fetching instance of userId ' + user?.id + ':', error)
-      //     return Response.redirect(new URL('/signup', nextUrl))
-      //   }
-      //   if (!data) {
-      //     return Response.redirect(new URL('/signup', nextUrl))
-      //   }
-      // }
-      // if (isLoggedIn && nextUrl.pathname === '/dashboard') {
-      //   return hasInstance()
-      // }
-    
+      console.log("Middleware check - Path:", nextUrl.pathname);
+      console.log("Middleware check - User logged in:", isLoggedIn);
+      console.log("Middleware check - User email:", auth?.user?.email);
+      console.log("Middleware check - Is admin:", isAdmin);
 
-      if (isDashboardPath) {
-        if (isLoggedIn) return true
-        return false // Redirect unauthenticated users to login page
-      } else if (isLoggedIn && nextUrl.pathname === '/signin') {
-        // return Response.redirect(new URL('/dashboard', nextUrl))
+      // Restrict admin paths to admin users only
+      if (isAdminPath) {
+        if (isLoggedIn && isAdmin) {
+          console.log("Middleware - Admin access granted");
+          return true;
+        }
+        // Redirect non-admin users to dashboard
+        console.log("Middleware - Admin access denied, redirecting to dashboard");
+        return Response.redirect(new URL('/dashboard', nextUrl));
       }
 
-      return true
+      // Handle dashboard paths
+      if (isDashboardPath) {
+        if (isLoggedIn) return true;
+        // Redirect to signin if not logged in
+        return Response.redirect(new URL('/signin', nextUrl));
+      } else if (isLoggedIn && nextUrl.pathname === '/signin') {
+        // Redirect to dashboard if already logged in and trying to access signin
+        return Response.redirect(new URL('/dashboard', nextUrl));
+      }
+
+      return true;
     },
   },
 })
