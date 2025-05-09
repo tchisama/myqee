@@ -12,26 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+
 import { toast, Toaster } from "sonner"
-import { Search, ArrowLeft, Plus, Database, User } from "lucide-react"
+import { Search, ArrowLeft, Database, User } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface Pool {
@@ -40,6 +25,7 @@ interface Pool {
   description: string
   server_url: string
   max_instances: number
+  instances_number: number
   status: string
   created_at: string
   updated_at: string
@@ -62,16 +48,14 @@ interface Instance {
 export default function PoolDetailsPage({ params }: { params: { id: string } }) {
   const supabase = useSupabase()
   const router = useRouter()
-  const poolId = parseInt(params.id)
+  const id = params.id // Access directly for now, will be fixed in Next.js 16
+  const poolId = parseInt(id)
 
   const [pool, setPool] = useState<Pool | null>(null)
   const [instances, setInstances] = useState<Instance[]>([])
-  const [availableInstances, setAvailableInstances] = useState<Instance[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredInstances, setFilteredInstances] = useState<Instance[]>([])
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [selectedInstanceId, setSelectedInstanceId] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [instanceCount, setInstanceCount] = useState(0)
   const [maxInstances, setMaxInstances] = useState(10)
@@ -138,25 +122,6 @@ export default function PoolDetailsPage({ params }: { params: { id: string } }) 
     setLoading(false)
   }
 
-  // Fetch available instances (not assigned to any pool)
-  const fetchAvailableInstances = async () => {
-    const { data, error } = await supabase
-      .from('instances')
-      .select(`
-        *,
-        owner:users(name, email)
-      `)
-      .is('pool_id', null)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching available instances:', error)
-      return
-    }
-
-    setAvailableInstances(data || [])
-  }
-
   // Filter instances based on search query
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -176,66 +141,6 @@ export default function PoolDetailsPage({ params }: { params: { id: string } }) 
     fetchPool()
     fetchInstances()
   }, [poolId, supabase])
-
-  // Load available instances when add dialog opens
-  useEffect(() => {
-    if (addDialogOpen) {
-      fetchAvailableInstances()
-    }
-  }, [addDialogOpen])
-
-  // Handle adding instance to pool
-  const handleAddInstance = async () => {
-    if (!selectedInstanceId) {
-      toast.error("Please select an instance")
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      // Check if pool has reached capacity
-      if (instanceCount >= maxInstances) {
-        toast.error(`Pool has reached maximum capacity of ${maxInstances} instances`)
-        setAddDialogOpen(false)
-        setIsSubmitting(false)
-        return
-      }
-
-      // Assign instance to pool using our function that updates instances_number
-      const { data, error } = await supabase.rpc('assign_instance_to_pool', {
-        p_instance_id: parseInt(selectedInstanceId),
-        p_pool_id: poolId
-      })
-
-      if (error) throw error
-
-      if (!data) {
-        toast.error("Failed to add instance to pool. Pool may be at capacity.")
-        setAddDialogOpen(false)
-        setIsSubmitting(false)
-        return
-      }
-
-      toast.success("Instance added to pool successfully")
-
-      // Update local state
-      setInstanceCount(prev => prev + 1)
-
-      // Close dialog and reset selection
-      setAddDialogOpen(false)
-      setSelectedInstanceId("")
-
-      // Refresh data
-      fetchInstances()
-      fetchPool()
-    } catch (error) {
-      console.error('Error adding instance to pool:', error)
-      toast.error("Failed to add instance to pool")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   // Handle removing instance from pool
   const handleRemoveInstance = async (instanceId: number) => {
@@ -361,60 +266,16 @@ export default function PoolDetailsPage({ params }: { params: { id: string } }) 
 
           <Card>
             <CardHeader>
-              <CardTitle>Actions</CardTitle>
-              <CardDescription>Manage instances in this pool</CardDescription>
+              <CardTitle>Pool Status</CardTitle>
+              <CardDescription>Current pool status</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Instance to Pool
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Instance to Pool</DialogTitle>
-                      <DialogDescription>
-                        Select an instance to add to this pool.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <label htmlFor="instance" className="text-sm font-medium">
-                          Select Instance
-                        </label>
-                        <Select
-                          value={selectedInstanceId}
-                          onValueChange={setSelectedInstanceId}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an instance" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableInstances.length === 0 ? (
-                              <SelectItem value="none" disabled>
-                                No available instances
-                              </SelectItem>
-                            ) : (
-                              availableInstances.map((instance) => (
-                                <SelectItem key={instance.id} value={instance.id.toString()}>
-                                  {instance.name} ({instance.owner?.email})
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={handleAddInstance} disabled={isSubmitting || !selectedInstanceId}>
-                        {isSubmitting ? "Adding..." : "Add to Pool"}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <div className="p-4 border rounded-md bg-gray-50">
+                  <p className="text-sm text-muted-foreground">
+                    Instances are automatically assigned to pools during creation.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -448,7 +309,7 @@ export default function PoolDetailsPage({ params }: { params: { id: string } }) 
               <Database className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-medium">No instances in this pool</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Add instances to this pool using the "Add Instance to Pool" button.
+                Instances are automatically assigned to pools during creation.
               </p>
             </div>
           ) : (
