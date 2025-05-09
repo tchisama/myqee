@@ -1,18 +1,14 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { CreditCard, Lock } from "lucide-react"
-import { UseFormReturn } from "react-hook-form"
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { SignupFormValues } from "../types"
+import { CreditCard, Lock, ExternalLink } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface PaymentDetailsStepProps {
-  form: UseFormReturn<SignupFormValues>
   servicePrice: number
 }
 
-export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepProps) {
+export function PaymentDetailsStep({ servicePrice }: PaymentDetailsStepProps) {
   return (
     <motion.div
       key="step3-content"
@@ -57,9 +53,9 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
-          className="border rounded-lg p-3 bg-white"
+          className="border rounded-lg p-4 bg-white"
         >
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <div className="h-8 w-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-md text-white font-bold text-xs flex items-center justify-center">
               CMI
             </div>
@@ -69,34 +65,23 @@ export function PaymentDetailsStep({ form, servicePrice }: PaymentDetailsStepPro
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {[
-              { name: "cardName" as const, label: "Name on Card", placeholder: "John Smith" },
-              { name: "cardNumber" as const, label: "Card Number", placeholder: "4242 4242 4242 4242" },
-              { name: "cardExpiry" as const, label: "Expiry Date", placeholder: "MM/YY" },
-              { name: "cardCvc" as const, label: "CVC", placeholder: "123" }
-            ].map((field, index) => (
-              <motion.div
-                key={field.name}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.4 + (index * 0.1) }}
-              >
-                <FormField
-                  control={form.control}
-                  name={field.name}
-                  render={({ field: formField }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">{field.label}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={field.placeholder} {...formField} className="h-8 text-sm" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </motion.div>
-            ))}
+          <div className="flex flex-col items-center justify-center space-y-3 py-2">
+            <p className="text-sm text-center text-slate-600">
+              Click the button below to complete your payment securely through the CMI payment gateway.
+            </p>
+
+            <Button
+              type="button"
+              className="w-full md:w-2/3 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center gap-2"
+            >
+              <CreditCard className="h-4 w-4" />
+              Pay with CMI
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+
+            <p className="text-xs text-center text-slate-500">
+              You will be redirected to the secure CMI payment page to complete your transaction.
+            </p>
           </div>
 
           <motion.div

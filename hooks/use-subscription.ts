@@ -139,8 +139,28 @@ export function useSubscription(): UseSubscriptionResult {
               }
             }
 
-            // Create subscription info based on total days but use earliest ending subscription for status
-            const baseInfo = calculateSubscriptionInfo(earliestEnding.end_date, earliestEnding.status)
+            // Use the latest subscription with days remaining > 0 for status calculation
+            // This ensures that if there's any valid subscription, we won't show as expired
+
+            // Find any active subscription with days remaining > 0
+            const activeValidSubscriptions = activeSubsList.filter(sub => {
+              const endDate = new Date(sub.end_date)
+              return endDate > now && sub.status === 'active'
+            })
+
+            // If we have any valid active subscriptions, use the latest one for status
+            // Otherwise, fall back to the earliest ending subscription
+            const subscriptionForStatus = activeValidSubscriptions.length > 0
+              ? activeValidSubscriptions.sort((a, b) =>
+                  new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
+                )[0] // Latest end date
+              : earliestEnding
+
+            // Create subscription info based on the appropriate subscription for status
+            const baseInfo = calculateSubscriptionInfo(
+              subscriptionForStatus.end_date,
+              subscriptionForStatus.status
+            )
 
             // Override days remaining with total from all subscriptions
             setSubscriptionInfo({
@@ -152,7 +172,8 @@ export function useSubscription(): UseSubscriptionResult {
                 totalDaysRemaining <= 5 ? 'medium' :
                 totalDaysRemaining <= 7 ? 'low' : 'none',
               isExpiring: totalDaysRemaining <= 7,
-              // Set isExpired flag based on days remaining
+              // Set isExpired flag based on total days remaining
+              // If we have any days remaining > 0, we're not expired
               isExpired: totalDaysRemaining <= 0
             })
           } else {

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { useSupabase } from "@/hooks/use-supabase"
 import { useSession } from "next-auth/react"
-import { format, parseISO } from "date-fns"
+import { format, parseISO, isPast } from "date-fns"
 
 
 
@@ -24,6 +24,7 @@ interface BillingHistoryItem {
   paymentMethod: string;
   downloadUrl: string;
   items: string;
+  end_date?: string; // Add end_date field to track subscription expiration
 }
 
 export function BillingHistory() {
@@ -77,14 +78,25 @@ export function BillingHistory() {
           const invoiceId = `INV-${format(parseISO(sub.created_at), 'yyyy')}-${String(index + 1).padStart(3, '0')}`;
           const planName = sub.plan_name.charAt(0).toUpperCase() + sub.plan_name.slice(1);
 
+          // Check if the subscription has an end date and if it's in the past
+          let status = sub.status;
+          if (sub.end_date) {
+            const endDate = parseISO(sub.end_date);
+            if (isPast(endDate)) {
+              // If end date is in the past, mark as expired regardless of database status
+              status = 'expired';
+            }
+          }
+
           return {
             id: invoiceId,
             date: format(parseISO(sub.created_at), 'MMMM d, yyyy'),
             amount: sub.amount || (sub.plan_name === 'basic' ? 29.00 : sub.plan_name === 'pro' ? 79.00 : 199.00),
-            status: sub.status,
+            status: status, // Use the potentially updated status
             paymentMethod: "Visa ending in 4242", // Placeholder
             downloadUrl: "#",
             items: `${planName} Plan - Monthly Subscription`,
+            end_date: sub.end_date, // Store the end date for potential future use
           };
         });
 
@@ -124,6 +136,7 @@ export function BillingHistory() {
   };
 
   // Get status counts - map database statuses to display statuses
+  // This will now correctly count subscriptions that were marked as expired due to past end dates
   const statusCounts = {
     all: billingHistory.length,
     paid: billingHistory.filter(inv => inv.status === "active" || inv.status === "paid").length,
@@ -231,7 +244,13 @@ export function BillingHistory() {
                         <div className="flex items-center gap-1.5">
                           {getStatusIcon(invoice.status)}
                           <Badge
-                            className={invoice.status === "Active" ? "bg-green-500 hover:bg-green-600" : ""}
+                            className={
+                              invoice.status === "active" || invoice.status === "paid"
+                                ? "bg-green-500 hover:bg-green-600"
+                                : invoice.status === "expired" || invoice.status === "failed"
+                                  ? "bg-red-500 hover:bg-red-600"
+                                  : ""
+                            }
                           >
                             {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                           </Badge>

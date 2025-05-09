@@ -1,4 +1,6 @@
-import { differenceInDays, parseISO } from "date-fns"
+import { differenceInDays, parseISO, addDays } from "date-fns"
+import { SupabaseClient } from '@supabase/supabase-js'
+import { getPlanById, getDurationDays } from './plans'
 
 export interface SubscriptionInfo {
   daysRemaining: number
@@ -7,6 +9,29 @@ export interface SubscriptionInfo {
   isExpiring: boolean
   isExpired: boolean
   urgencyLevel: 'none' | 'low' | 'medium' | 'high'
+}
+
+export interface CreateSubscriptionParams {
+  instanceId: number
+  ownerId: number
+  planId: string
+  durationId: string
+  supabase: SupabaseClient
+}
+
+export interface SubscriptionResult {
+  success: boolean
+  message: string
+  error?: any
+  subscription?: {
+    instanceId: number
+    planName: string
+    amount: number
+    startDate: string
+    endDate: string
+    status: string
+    hasActiveSubscription: boolean
+  }
 }
 
 /**
@@ -53,6 +78,7 @@ export function calculateSubscriptionInfo(
   }
 
   // Check if subscription is expired (days <= 0)
+  // Note: We now consider a subscription with exactly 0 days remaining as expired
   const isExpired = daysRemaining <= 0;
 
   return {
@@ -104,4 +130,140 @@ export function getSubscriptionStatusClasses(
   }
 
   return classes[urgencyLevel][type]
+}
+
+/**
+ * Create a new subscription for an instance
+ *
+ * This function handles:
+ * - Checking for existing active subscriptions
+ * - Calculating start and end dates based on existing subscriptions
+ * - Calculating the total amount based on plan price and duration
+ * - Creating the subscription record in the database
+ *
+ * @param params - Parameters for creating a subscription
+ * @returns Result object with success status, message, and subscription details
+ */
+export async function createSubscription(params: CreateSubscriptionParams): Promise<SubscriptionResult> {
+  const { instanceId, ownerId, planId, durationId, supabase } = params;
+
+  try {
+    // Get plan details
+    const plan = getPlanById(planId);
+    if (!plan) {
+      return {
+        success: false,
+        message: "Plan not found",
+        error: new Error("Plan not found")
+      };
+    }
+
+    // Get duration in days
+    const durationDays = getDurationDays(durationId);
+
+    // Calculate end date (initially from today)
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + durationDays);
+
+    // Calculate total amount based on duration (months)
+    const months = Math.ceil(durationDays / 30);
+    const totalAmount = plan.price * months;
+
+    // Check if the instance already has an active subscription
+    const { data: existingSubscriptions, error: fetchError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('instance_id', instanceId)
+      .eq('status', 'active');
+
+    if (fetchError) {
+      return {
+        success: false,
+        message: "Error checking existing subscriptions",
+        error: fetchError
+      };
+    }
+
+    // Always set status to active
+    const subscriptionStatus = 'active';
+    let startDate = new Date();
+    let calculatedEndDate = endDate;
+    let hasActiveSubscription = false;
+
+    if (existingSubscriptions && existingSubscriptions.length > 0) {
+      // Get the subscription with the latest end date
+      const latestSubscription = existingSubscriptions.reduce((latest, current) => {
+        const latestEndDate = latest.end_date ? new Date(latest.end_date) : new Date();
+        const currentEndDate = current.end_date ? new Date(current.end_date) : new Date();
+        return currentEndDate > latestEndDate ? current : latest;
+      }, existingSubscriptions[0]);
+
+      // Check if the latest subscription is still active (end date is in the future)
+      if (latestSubscription.end_date) {
+        const latestEndDate = new Date(latestSubscription.end_date);
+        const now = new Date();
+
+        // Check if the end date is valid and in the future
+        if (!isNaN(latestEndDate.getTime())) {
+          // If the end date is in the future, consider it active
+          if (latestEndDate > now) {
+            hasActiveSubscription = true;
+            startDate = latestEndDate;
+
+            // Recalculate end date based on the new start date
+            calculatedEndDate = new Date(startDate);
+            calculatedEndDate.setDate(calculatedEndDate.getDate() + durationDays);
+          }
+        }
+      }
+    }
+
+    // Format dates to ISO strings for database storage
+    const startDateISO = startDate.toISOString();
+    const endDateISO = calculatedEndDate.toISOString();
+
+    // Create subscription
+    const { error } = await supabase
+      .from('subscriptions')
+      .insert({
+        instance_id: instanceId,
+        owner_id: ownerId,
+        plan_name: planId,
+        amount: totalAmount,
+        status: subscriptionStatus,
+        start_date: startDateISO,
+        end_date: endDateISO
+      });
+
+    if (error) {
+      return {
+        success: false,
+        message: "Failed to create subscription",
+        error
+      };
+    }
+
+    // Return success with subscription details
+    return {
+      success: true,
+      message: hasActiveSubscription
+        ? `Created a new ${plan.name} subscription that will start when the current subscription ends.`
+        : `Created a new ${plan.name} subscription starting today.`,
+      subscription: {
+        instanceId,
+        planName: planId,
+        amount: totalAmount,
+        startDate: startDateISO,
+        endDate: endDateISO,
+        status: subscriptionStatus,
+        hasActiveSubscription
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "An unexpected error occurred",
+      error
+    };
+  }
 }

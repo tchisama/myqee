@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { AdminNavbar } from "./components/admin-navbar"
 import Link from "next/link"
 import Image from "next/image"
 import { LogOut, User } from "lucide-react"
@@ -17,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { AdminSidebar } from "./components/admin-sidebar"
 
 export default function AdminLayout({
   children,
@@ -51,80 +51,81 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/20">
-      {/* Admin Header */}
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6">
-        <div className="flex flex-1 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link href="/admin" className="flex items-center gap-2">
-              <Image
-                src="/qee-nano.png"
-                alt="QEE Logo"
-                width={300}
-                height={200}
-                className="h-8 w-fit"
-              />
-              <span className="text-xl font-bold">Admin</span>
-            </Link>
-          </div>
+    <div className="flex min-h-screen bg-muted/20">
+      {/* Admin Sidebar */}
+      <AdminSidebar />
 
-          <div className="flex items-center gap-4">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard">
-                Back to Dashboard
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col">
+        {/* Admin Header */}
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Link href="/admin" className="flex items-center gap-2 md:hidden">
+                <Image
+                  src="/qee-nano.png"
+                  alt="QEE Logo"
+                  width={300}
+                  height={200}
+                  className="h-8 w-fit"
+                />
+                <span className="text-xl font-bold">Admin</span>
               </Link>
-            </Button>
+            </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                  <Avatar className="h-9 w-9 border">
-                    <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "User"} />
-                    <AvatarFallback className="text-xs">
-                      {session?.user?.name
-                        ? session.user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                        : "QE"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden md:block">
-                    <div className="flex items-center gap-1">
-                      <p className="text-sm font-medium leading-none">{session?.user?.name || "Admin"}</p>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" asChild>
+                <Link href="/dashboard">
+                  Back to Dashboard
+                </Link>
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                    <Avatar className="h-9 w-9 border">
+                      <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "User"} />
+                      <AvatarFallback className="text-xs">
+                        {session?.user?.name
+                          ? session.user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+                          : "QE"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="hidden md:block">
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm font-medium leading-none">{session?.user?.name || "Admin"}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{session?.user?.email || "admin@qee.com"}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{session?.user?.email || "admin@qee.com"}</p>
                   </div>
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="flex flex-col">
-                  <span>Admin Account</span>
-                  <span className="text-xs font-normal text-muted-foreground mt-1">{session?.user?.email || "admin@qee.com"}</span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="h-4 w-4 mr-2" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => signOut({ callbackUrl: "/signin" })}
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="flex flex-col">
+                    <span>Admin Account</span>
+                    <span className="text-xs font-normal text-muted-foreground mt-1">{session?.user?.email || "admin@qee.com"}</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => signOut({ callbackUrl: "/signin" })}
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Admin Navbar */}
-      <div className="border-b">
-        <AdminNavbar />
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto p-6 lg:p-8">{children}</main>
       </div>
-
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto overflow-auto p-6 lg:p-8">{children}</main>
     </div>
   )
 }

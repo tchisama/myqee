@@ -85,17 +85,25 @@ export default function SubscriptionsPage() {
     }
   }, [searchQuery, subscriptions])
 
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return <Badge variant="default" className="bg-green-500">Active</Badge>
-      case 'expired':
-        return <Badge variant="destructive">Expired</Badge>
-      case 'cancelled':
-        return <Badge variant="outline" className="text-orange-500 border-orange-500">Cancelled</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  const getStatusBadge = (date: string) => {
+    if (!date) return null
+    const endDate = new Date(date)
+    const now = new Date()
+    if (endDate > now) {
+      return <Badge variant="default" className="bg-green-500">Active</Badge>
+    } else {
+      return <Badge variant="destructive">Expired</Badge>
     }
+    // switch (status.toLowerCase()) {
+    //   case 'active':
+    //     return <Badge variant="default" className="bg-green-500">Active</Badge>
+    //   case 'expired':
+    //     return <Badge variant="destructive">Expired</Badge>
+    //   case 'cancelled':
+    //     return <Badge variant="outline" className="text-orange-500 border-orange-500">Cancelled</Badge>
+    //   default:
+    //     return <Badge variant="outline">{status}</Badge>
+    // }
   }
 
   const getDaysRemaining = (endDate: string) => {
@@ -195,7 +203,7 @@ export default function SubscriptionsPage() {
                       <TableCell>{subscription.instance?.name || `Instance #${subscription.instance_id}`}</TableCell>
                       <TableCell className="capitalize">{subscription.plan_name}</TableCell>
                       <TableCell>{subscription.amount?.toFixed(2)} dh</TableCell>
-                      <TableCell>{getStatusBadge(subscription.status)}</TableCell>
+                      <TableCell>{getStatusBadge(subscription.end_date)}</TableCell>
                       <TableCell>
                         {subscription.start_date ? (
                           <span>{format(parseISO(subscription.start_date), "MMM d, yyyy")}</span>
@@ -209,7 +217,10 @@ export default function SubscriptionsPage() {
                       <TableCell>
                         {subscription.end_date ?
                           getDaysRemaining(
-                            subscription.end_date,
+                            new Date(
+                              // plus one day
+                              new Date(subscription.end_date).getTime() + (1000 * 60 * 60 * 24) 
+                              ).toISOString()
                           ) : "N/A"}
                       </TableCell>
                       <TableCell className="text-right">

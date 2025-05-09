@@ -6,35 +6,80 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Clock, AlertCircle,  ArrowRight } from "lucide-react"
 import Image from "next/image"
 import { useSubscription } from "@/hooks/use-subscription"
+import { useUpdateSubscription } from "@/hooks/use-update-subscription"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 export function SubscriptionExpiredContent() {
   const router = useRouter()
-  const { activeSubscriptions, loading } = useSubscription()
-  const [showPage, setShowPage] = useState(true)
+  const { subscriptionInfo, activeSubscriptions, loading } = useSubscription()
+  const { updateSubscriptionStatus, loading: updateLoading } = useUpdateSubscription({
+    onSuccess: () => {
+      toast.success("Subscription status updated to expired")
+    },
+    onError: (error) => {
+      toast.error(`Failed to update subscription: ${error.message}`)
+    }
+  })
+  const [showPage, ] = useState(true)
+  const [statusUpdated, setStatusUpdated] = useState(false)
 
   // Check if we should show this page
   useEffect(() => {
-    // If there are active subscriptions with days remaining > 0, redirect to dashboard
-    if (!loading && activeSubscriptions.some(sub => {
-      const endDate = sub.end_date ? new Date(sub.end_date) : null
-      const now = new Date()
+    // Only redirect if we have subscription info and it's not expired
+    if (!loading) {
+      console.log('Subscription check in expired page:', {
+        daysRemaining: subscriptionInfo.daysRemaining,
+        status: subscriptionInfo.status,
+        isExpired: subscriptionInfo.isExpired,
+        endDate: subscriptionInfo.endDate
+      })
 
-      // Calculate days remaining
-      const daysRemaining = endDate && endDate > now
-        ? Math.max(0, Math.round((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-        : 0
-
-      console.log(`Subscription check in expired page: ID ${sub.id}, days: ${daysRemaining}`)
-
-      // Only redirect if there are more than 0 days remaining
-      return daysRemaining > 0
-    })) {
-      console.log('Active subscription with days > 0 found, redirecting to dashboard')
-      router.push("/dashboard")
-      setShowPage(false)
+      // If days remaining is >= 0, redirect to dashboard
+      // This matches the logic in instance-provider.tsx which redirects to expired page only when days < 0
+      // if (subscriptionInfo.daysRemaining >= 0 && !subscriptionInfo.isExpired) {
+      //   console.log('Subscription has days >= 0 and is not expired, redirecting to dashboard')
+      //   router.push("/dashboard")
+      //   setShowPage(false)
+      // }
     }
-  }, [activeSubscriptions, loading, router])
+  }, [subscriptionInfo, loading, router])
+
+  // Update subscription status to expired when days remaining is 0
+  useEffect(() => {
+    // Only proceed if we have subscription info and we haven't already updated the status
+    if (!loading && !statusUpdated && !updateLoading) {
+      // Check if there are active subscriptions with exactly 0 days remaining
+      const subscriptionsToUpdate = activeSubscriptions.filter(sub => {
+        // Calculate days remaining for this subscription
+        const endDate = new Date(sub.end_date)
+        const now = new Date()
+        const daysRemaining = Math.floor((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+        // Return true if days remaining is 0 and status is still active
+        return daysRemaining === 0 && sub.status === 'active'
+      })
+
+      // Update each subscription that needs to be updated
+      if (subscriptionsToUpdate.length > 0) {
+        console.log('Updating subscription status to expired for subscriptions:', subscriptionsToUpdate)
+
+        // Update each subscription one by one
+        Promise.all(
+          subscriptionsToUpdate.map(sub =>
+            updateSubscriptionStatus(sub.id, 'expired')
+          )
+        )
+        .then(() => {
+          setStatusUpdated(true)
+          console.log('All subscriptions updated to expired')
+        })
+        .catch(error => {
+          console.error('Error updating subscriptions:', error)
+        })
+      }
+    }
+  }, [activeSubscriptions, loading, statusUpdated, updateLoading, updateSubscriptionStatus])
 
   if (!showPage) {
     return null
@@ -98,13 +143,13 @@ export function SubscriptionExpiredContent() {
               Renew Subscription
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            {/* <Button
+            <Button
               variant="outline"
               className="w-full"
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/dashboard/billing")}
             >
-              Go to Dashboard
-            </Button> */}
+              Go to Billing Page
+            </Button>
           </CardFooter>
         </Card>
 

@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { format, addDays } from "date-fns"
-import { CreditCard, Plus, Loader2, Check, Calendar } from "lucide-react"
+import { CreditCard, Plus, Loader2  } from "lucide-react"
 
 import { useSupabase } from "@/hooks/use-supabase"
 import { plans, durationOptions, getPlanById } from "@/lib/plans"
+import { createSubscription } from "@/lib/subscription"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -23,7 +24,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -116,10 +116,33 @@ export function CreateSubscriptionDialog({ onSubscriptionCreated }: { onSubscrip
         }
 
         if (data && data.length > 0) {
-          // Store the active subscription with the latest end date
-          setActiveSubscription(data[0])
+          // Find the subscription with the latest end date that's still in the future
+          const now = new Date();
+          const activeSubscriptions = data.filter(sub => {
+            if (!sub.end_date) return false;
+
+            const endDate = new Date(sub.end_date);
+            // Check if end date is valid and in the future
+            return !isNaN(endDate.getTime()) && endDate > now;
+          });
+
+          if (activeSubscriptions.length > 0) {
+            // Sort by end date (descending) to get the one that ends last
+            const sortedActive = [...activeSubscriptions].sort((a, b) => {
+              const dateA = new Date(a.end_date).getTime();
+              const dateB = new Date(b.end_date).getTime();
+              return dateB - dateA; // Descending order
+            });
+
+            // Store the active subscription with the latest end date
+            setActiveSubscription(sortedActive[0]);
+            console.log('Found active subscription with future end date:', sortedActive[0].end_date);
+          } else {
+            console.log('No active subscriptions with future end dates found');
+            setActiveSubscription(null);
+          }
         } else {
-          setActiveSubscription(null)
+          setActiveSubscription(null);
         }
       }
 
@@ -195,101 +218,28 @@ export function CreateSubscriptionDialog({ onSubscriptionCreated }: { onSubscrip
         throw new Error("Instance or owner information not found")
       }
 
-      const plan = getPlanById(values.planId)
-      if (!plan) {
-        throw new Error("Plan not found")
+      // Call the createSubscription function from lib
+      const result = await createSubscription({
+        instanceId: instance.id,
+        ownerId: instance.owner.id,
+        planId: values.planId,
+        durationId: values.durationId,
+        supabase
+      });
+
+      if (!result.success) {
+        throw result.error || new Error(result.message);
       }
 
-      const duration = durationOptions.find(d => d.id === values.durationId)
-      if (!duration) {
-        throw new Error("Duration not found")
-      }
-
-      // Calculate end date
-      const endDate = new Date()
-      endDate.setDate(endDate.getDate() + duration.days)
-
-      // Calculate total amount based on duration
-      const months = Math.ceil(duration.days / 30)
-      const totalAmount = plan.price * months
-
-      // Check if the instance already has an active subscription
-      const { data: existingSubscriptions, error: fetchError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('instance_id', instance.id)
-        .eq('status', 'active')
-
-      if (fetchError) {
-        console.error('Error checking existing subscriptions:', fetchError)
-      }
-
-      // Determine if there's an existing active subscription
-      const hasActiveSubscription = existingSubscriptions && existingSubscriptions.length > 0;
-
-      // Always set status to active, but adjust dates based on whether there's an existing active subscription
-      const subscriptionStatus = 'active';
-      let startDate = new Date();
-      let calculatedEndDate = endDate;
-
-      if (hasActiveSubscription) {
-        // Get the active subscription with the latest end date
-        const activeSubscription = existingSubscriptions.reduce((latest, current) => {
-          const latestEndDate = latest.end_date ? new Date(latest.end_date) : new Date();
-          const currentEndDate = current.end_date ? new Date(current.end_date) : new Date();
-          return currentEndDate > latestEndDate ? current : latest;
-        }, existingSubscriptions[0]);
-
-        // Set start date to the end date of the active subscription
-        if (activeSubscription.end_date) {
-          // Parse the end date string to ensure it's a valid Date object
-          const activeEndDate = new Date(activeSubscription.end_date);
-
-          // Make sure the date is valid
-          if (!isNaN(activeEndDate.getTime())) {
-            startDate = activeEndDate;
-
-            // Recalculate end date based on the new start date
-            calculatedEndDate = new Date(startDate);
-            calculatedEndDate.setDate(calculatedEndDate.getDate() + duration.days);
-
-            // Log for debugging
-            console.log('Active subscription end date:', activeEndDate);
-            console.log('New subscription start date:', startDate);
-            console.log('New subscription end date:', calculatedEndDate);
-          } else {
-            console.error('Invalid active subscription end date:', activeSubscription.end_date);
-          }
-        }
-      }
-
-      // Format dates to ISO strings for database storage
-      const startDateISO = startDate.toISOString();
-      const endDateISO = calculatedEndDate.toISOString();
-
-      // Create subscription
-      const { error } = await supabase
-        .from('subscriptions')
-        .insert({
-          instance_id: instance.id,
-          owner_id: instance.owner.id,
-          plan_name: values.planId,
-          amount: totalAmount,
-          status: subscriptionStatus,
-          start_date: startDateISO,
-          end_date: endDateISO
-        })
-
-      if (error) {
-        throw error
-      }
+      // Get plan for display purposes
+      const plan = getPlanById(values.planId);
 
       // Show success message
-      if (hasActiveSubscription) {
-        const activeEndDate = format(startDate, "MMM d, yyyy");
-        toast.success(`Created an active ${plan.name} subscription for ${instance.name} (${totalAmount} dh). Will start on ${activeEndDate} when the current subscription ends.`)
+      if (result.subscription?.hasActiveSubscription) {
+        const activeEndDate = format(new Date(result.subscription.startDate), "MMM d, yyyy");
+        toast.success(`Created an active ${plan?.name} subscription for ${instance.name} (${result.subscription.amount} dh). Will start on ${activeEndDate} when the current subscription ends.`)
       } else {
-        toast.success(`Successfully created an active ${plan.name} subscription for ${instance.name} (${totalAmount} dh)`)
+        toast.success(`Successfully created an active ${plan?.name} subscription for ${instance.name} (${result.subscription?.amount} dh). Starting today.`)
       }
 
       // Reset form and close dialog
@@ -513,9 +463,22 @@ export function CreateSubscriptionDialog({ onSubscriptionCreated }: { onSubscrip
                       <p>This instance already has an active subscription until {format(new Date(activeSubscription.end_date), "MMMM d, yyyy")}.</p>
                       <p>The new subscription will:</p>
                       <ul className="list-disc ml-4 mt-1">
-                        <li>Be created with an "active" status</li>
+                        <li>Be created with an &quot;active&quot; status</li>
                         <li>Start automatically when the current subscription ends</li>
-                        <li>Have its duration calculated from the current subscription's end date</li>
+                        <li>Have its duration calculated from the current subscription&apos;s end date</li>
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Show message for expired subscriptions */}
+                  {selectedInstanceId && !activeSubscription && (
+                    <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                      <p>This instance has no active subscriptions or all subscriptions have expired.</p>
+                      <p>The new subscription will:</p>
+                      <ul className="list-disc ml-4 mt-1">
+                        <li>Be created with an &quot;active&quot; status</li>
+                        <li>Start immediately (today)</li>
+                        <li>Have its duration calculated from today&apos;s date</li>
                       </ul>
                     </div>
                   )}

@@ -28,7 +28,7 @@ interface TemplateConfigTabProps {
 export function TemplateConfigTab({ defaultValues, onSubmit, isSaving }: TemplateConfigTabProps) {
   // Initialize form with default values
   const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) ,
     defaultValues: {
       companyName: defaultValues.companyName,
       template: defaultValues.template,

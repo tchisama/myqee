@@ -93,9 +93,9 @@ export default function SignInPage() {
               priority
             />
           </div>
-          <p className="mt-2 text-base text-slate-600">
+          {/* <p className="mt-2 text-base text-slate-600">
             Sign in to access your dashboard
-          </p>
+          </p> */}
         </div>
 
         <Card className="overflow-hidden border-primary/10 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:shadow-lg">

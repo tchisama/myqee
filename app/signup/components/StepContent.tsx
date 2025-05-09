@@ -37,7 +37,7 @@ export function StepContent({
       {currentStep === 2 && <LogoUploadStep logoPreview={logoPreview} setLogoPreview={setLogoPreview} />}
 
       {/* Step 3: Payment Details */}
-      {currentStep === 3 && <PaymentDetailsStep form={form} servicePrice={servicePrice} />}
+      {currentStep === 3 && <PaymentDetailsStep servicePrice={servicePrice} />}
     </AnimatePresence>
   )
 }

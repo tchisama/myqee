@@ -39,16 +39,9 @@ export function InstanceProvider({ children }: InstanceProviderProps) {
   const { subscriptionInfo, loading: subscriptionLoading } = useSubscription()
 
   // Calculate if subscription is expired or inactive - do this before any conditional returns
-  // Check both the days remaining and the actual end date to determine if expired
-  const isSubscriptionExpired = !loading && !subscriptionLoading && hasInstance && (
-    // Check if days remaining is 0 or less
-    subscriptionInfo.daysRemaining <= 0 ||
-    // Check if end date is in the past
-    (subscriptionInfo.endDate && new Date(subscriptionInfo.endDate) < new Date()) ||
-    // Check status
-    subscriptionInfo.status === 'inactive' ||
-    subscriptionInfo.status === 'expired'
-  )
+  // Use the isExpired flag from subscriptionInfo as the source of truth
+  // This ensures we're using the same logic across the application
+  const isSubscriptionExpired = !loading && !subscriptionLoading && hasInstance && subscriptionInfo.isExpired
 
   // Debug log to help troubleshoot
   console.log('Subscription status:', {
@@ -58,7 +51,9 @@ export function InstanceProvider({ children }: InstanceProviderProps) {
     endDatePassed: subscriptionInfo.endDate ? new Date(subscriptionInfo.endDate) < new Date() : null,
     isExpiring: subscriptionInfo.isExpiring,
     urgencyLevel: subscriptionInfo.urgencyLevel,
-    isSubscriptionExpired
+    isExpired: subscriptionInfo.isExpired,
+    isSubscriptionExpired,
+    shouldBlockAccess: subscriptionInfo.daysRemaining <= 0 // Consistent with our new logic
   })
 
   // First useEffect - check if user has instances
@@ -133,29 +128,20 @@ export function InstanceProvider({ children }: InstanceProviderProps) {
       return
     }
 
-    // Force redirect for expired subscriptions based on:
-    // 1. The isSubscriptionExpired flag (which checks days, end date, and status)
-    // 2. Explicitly check end date is in the past (as a backup)
-    const endDateExpired = subscriptionInfo.endDate && new Date(subscriptionInfo.endDate) < new Date();
-
-    const shouldRedirect =
-      // Either the calculated flag is true
-      isSubscriptionExpired ||
-      // Or explicitly check if end date is in the past
-      endDateExpired;
+    // Use the isExpired flag from subscriptionInfo as the single source of truth
+    // This ensures we're using the same logic across the application
+    const shouldRedirect = subscriptionInfo.isExpired;
 
     // If subscription is expired, redirect to subscription expired page
     // But only if we're not already on the subscription expired page or billing page
     if (shouldRedirect && typeof window !== 'undefined') {
       if (!pathname?.includes('/subscription-expired') && !pathname?.includes('/dashboard/billing')) {
-        console.log('Redirecting to subscription expired page - End date expired:', endDateExpired, 'Current path:', pathname);
+        console.log('Redirecting to subscription expired page - isExpired:', subscriptionInfo.isExpired, 'Current path:', pathname);
         router.push('/subscription-expired');
       }
     }
   }, [
-    isSubscriptionExpired,
-    subscriptionInfo.endDate,
-    subscriptionInfo.daysRemaining,
+    subscriptionInfo.isExpired, // Only need isExpired as the source of truth
     hasInstance,
     loading,
     subscriptionLoading,
@@ -177,14 +163,14 @@ export function InstanceProvider({ children }: InstanceProviderProps) {
     return null
   }
 
-  // If subscription is expired (by any criteria), immediately redirect to subscription expired page
+  // If subscription is expired, immediately redirect to subscription expired page
   // But only if we're not already on the subscription expired page or billing page
-  const endDateExpired = subscriptionInfo.endDate && new Date(subscriptionInfo.endDate) < new Date();
-  const immediateRedirectNeeded = (isSubscriptionExpired || endDateExpired) && typeof window !== 'undefined';
+  // Use the isExpired flag from subscriptionInfo as the single source of truth
+  const immediateRedirectNeeded = subscriptionInfo.isExpired && typeof window !== 'undefined';
 
   if (immediateRedirectNeeded) {
     if (!pathname?.includes('/subscription-expired') && !pathname?.includes('/dashboard/billing')) {
-      console.log('Immediate redirect to subscription expired page - End date expired:', endDateExpired, 'Current path:', pathname);
+      console.log('Immediate redirect to subscription expired page - isExpired:', subscriptionInfo.isExpired, 'Current path:', pathname);
 
       // Use window.location for a hard redirect instead of router.push
       window.location.href = '/subscription-expired';
